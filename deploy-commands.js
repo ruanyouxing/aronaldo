@@ -1,5 +1,5 @@
 const { REST, Routes } = require("discord.js");
-const { token, clientId } = require("./config.json");
+const { token, clientId, serverId } = require("./config.json");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,7 +14,7 @@ const commandFiles = fs
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
-  
+
   if ("data" in command && "execute" in command) {
     commands.push(command.data.toJSON());
     console.log(`✅ Loaded command: ${command.data.name}`);
@@ -36,9 +36,12 @@ const rest = new REST().setToken(token);
 
     // Register commands globally (takes up to 1 hour to propagate)
     // For faster testing, you can use guild-specific commands instead
-    const data = await rest.put(Routes.applicationCommands(clientId), {
-      body: commands,
-    });
+    const data = await rest.put(
+      Routes.applicationGuildCommands(clientId, serverId),
+      {
+        body: commands,
+      }
+    );
 
     console.log(
       `✅ Successfully reloaded ${data.length} application (/) commands.`
