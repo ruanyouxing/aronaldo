@@ -1,104 +1,64 @@
-const { Client, Events, GatewayIntentBits, PermissionFlagsBits } = require("discord.js");
+const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
 const { token } = require("./config.json");
+const fs = require("fs");
+const path = require("path");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 });
 
-// Configuration - you can modify these
-const COMMAND_PREFIX = "/";
-const SHARE_COMMAND = "sharelink";
-const PRIVILEGED_ROLE_NAME = "chủ pếch";
+// Load commands
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith(".js"));
 
-client.once(Events.ClientReady, (readyClient) => {
-  console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-});
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
 
-// Handle messages
-client.on(Events.MessageCreate, async (message) => {
-  // Ignore bot messages
-  if (message.author.bot) return;
-
-  // Check if message starts with command prefix
-  if (!message.content.startsWith(COMMAND_PREFIX)) return;
-
-  const args = message.content.slice(COMMAND_PREFIX.length).trim().split(/\s+/);
-  const command = args.shift().toLowerCase();
-
-  // Handle the share command
-  if (command === SHARE_COMMAND) {
-    // Check permissions: Admin or specific privileged role
-    const isAdmin = message.member.permissions.has(PermissionFlagsBits.Administrator);
-    const hasPrivilegedRole = message.member.roles.cache.some(
-      (role) => role.name === PRIVILEGED_ROLE_NAME
+  if ("data" in command && "execute" in command) {
+    client.commands.set(command.data.name, command);
+    console.log(`✅ Loaded command: ${command.data.name}`);
+  } else {
+    console.log(
+      `⚠️  The command at ${filePath} is missing "data" or "execute" property.`
     );
+  }
+}
 
-    if (!isAdmin && !hasPrivilegedRole) {
-      return message.reply(
-        "❌ You don't have permission to use this command. You need Administrator permission or the " +
-          PRIVILEGED_ROLE_NAME +
-          " role."
-      );
-    }
+// Bot ready event
+client.once(Events.ClientReady, (readyClient) => {
+  console.log(`✅ Ready! Logged in as ${readyClient.user.tag}`);
+  console.log(`📊 Loaded ${client.commands.size} command(s)`);
+});
 
-    // Parse arguments: !share <link> <@role>
-    if (args.length < 2) {
-      return message.reply(
-        "❌ Usage: `!sharelink <link> <@role>`\n" +
-          "Example: `!sharelink https://example.com @sếch thủ`"
-      );
-    }
+// Handle slash command interactions
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-    let link = args[0];
-    const roleMention = args[1];
+  const command = client.commands.get(interaction.commandName);
 
-    // Add https:// if no protocol is specified
-    if (!link.match(/^https?:\/\//i)) {
-      link = "https://" + link;
-    }
+  if (!command) {
+    console.error(`❌ No command matching ${interaction.commandName} was found.`);
+    return;
+  }
 
-    // Validate URL
-    try {
-      new URL(link);
-    } catch (error) {
-      return message.reply("❌ Invalid URL. Please provide a valid link.");
-    }
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(`❌ Error executing ${interaction.commandName}:`, error);
+    
+    const errorMessage = {
+      content: "❌ There was an error while executing this command!",
+      ephemeral: true,
+    };
 
-    // Extract role from mention or find by name
-    let role = null;
-    if (roleMention.startsWith("<@&") && roleMention.endsWith(">")) {
-      // It's a role mention
-      const roleId = roleMention.slice(3, -1);
-      role = message.guild.roles.cache.get(roleId);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp(errorMessage);
     } else {
-      // Try to find role by name (removing @ if present)
-      const roleName = roleMention.replace(/^@/, "");
-      role = message.guild.roles.cache.find((r) => r.name === roleName);
-    }
-
-    if (!role) {
-      return message.reply(
-        "❌ Role not found. Please mention a valid role or use the role name."
-      );
-    }
-
-    // Delete the original command message (optional)
-    try {
-      await message.delete();
-    } catch (error) {
-      console.log("Could not delete command message:", error.message);
-    }
-
-    // Send the link with role ping
-    try {
-      await message.channel.send(`${role} ${link}`);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      return message.reply("❌ Failed to send the message.");
+      await interaction.reply(errorMessage);
     }
   }
 });
