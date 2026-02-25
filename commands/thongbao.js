@@ -16,12 +16,6 @@ module.exports = {
     )
     .addStringOption((option) =>
       option
-        .setName("link1")
-        .setDescription("Link đọc số 1 (bắt buộc)")
-        .setRequired(true),
-    )
-    .addStringOption((option) =>
-      option
         .setName("ping")
         .setDescription("Có ping ai không?")
         .setRequired(false),
@@ -33,16 +27,13 @@ module.exports = {
         .setRequired(false),
     )
     .addStringOption((option) =>
-      option
-        .setName("link2")
-        .setDescription("Link đọc thứ hai (không bắt buộc)")
-        .setRequired(false),
+      option.setName("vi-h").setDescription("Link vi-h").setRequired(false),
     )
     .addStringOption((option) =>
-      option
-        .setName("link3")
-        .setDescription("Link đọc thứ ba (không bắt buộc)")
-        .setRequired(false),
+      option.setName("mimi").setDescription("Link mimi").setRequired(false),
+    )
+    .addStringOption((option) =>
+      option.setName("vinah").setDescription("Link vina").setRequired(false),
     )
     .addAttachmentOption((option) =>
       option.setName("cover").setDescription("File ảnh bìa").setRequired(false),
@@ -82,13 +73,12 @@ module.exports = {
         ephemeral: true,
       });
     }
-
     // Get all parameters
     const title = interaction.options.getString("title");
-    const link1 = interaction.options.getString("link1");
     const description = interaction.options.getString("description");
-    const link2 = interaction.options.getString("link2");
-    const link3 = interaction.options.getString("link3");
+    const link1 = interaction.options.getString("vi-h");
+    const link2 = interaction.options.getString("mimi");
+    const link3 = interaction.options.getString("vinah");
     const coverAttachment = interaction.options.getAttachment("cover");
     const ping = interaction.options.getString("ping");
     // if (coverAttachment) {
@@ -102,6 +92,12 @@ module.exports = {
     //     });
     //   }
     // }
+    if (!link1 && !link2 && !link3) {
+      return interaction.reply({
+        content: `❌ Link đâu anh?`,
+        ephemeral: true,
+      });
+    }
     const archive = interaction.options.getString("archive");
     const archiveFile = interaction.options.getAttachment("archive_file");
 
@@ -110,7 +106,7 @@ module.exports = {
 
     // Validate all URLs (skip validation for attachment URLs from Discord CDN)
     const urlsToValidate = [
-      { name: "link1", url: link1, required: true },
+      { name: "link1", url: link1, required: false },
       { name: "link2", url: link2, required: false },
       { name: "link3", url: link3, required: false },
       {
@@ -123,13 +119,6 @@ module.exports = {
     const validatedUrls = {};
     for (const { name, url, required } of urlsToValidate) {
       if (!url && !required) continue;
-
-      if (!url && required) {
-        return interaction.reply({
-          content: `❌ Cần phải có ${name}`,
-          ephemeral: true,
-        });
-      }
 
       const result = validateUrl(url);
       if (!result.valid) {
