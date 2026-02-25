@@ -23,7 +23,7 @@ for (const file of commandFiles) {
     console.log(`✅ Loaded command: ${command.data.name}`);
   } else {
     console.log(
-      `⚠️  The command at ${filePath} is missing "data" or "execute" property.`
+      `⚠️  The command at ${filePath} is missing "data" or "execute" property.`,
     );
   }
 }
@@ -41,7 +41,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
-    console.error(`❌ No command matching ${interaction.commandName} was found.`);
+    console.error(`❌ Không tìm thấy ${interaction.commandName}.`);
     return;
   }
 
@@ -49,9 +49,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await command.execute(interaction);
   } catch (error) {
     console.error(`❌ Error executing ${interaction.commandName}:`, error);
-    
+
     const errorMessage = {
-      content: "❌ There was an error while executing this command!",
+      content: "❌ Có lỗi xảy ra khi thực thi câu lệnh!",
       ephemeral: true,
     };
 
