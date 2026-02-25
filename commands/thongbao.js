@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { fanpageURL } = require("../config.json");
 const {
   COMMAND_CHANNEL_ID,
   ANNOUNCEMENT_CHANNEL_ID,
@@ -105,7 +104,6 @@ module.exports = {
     // }
     const archive = interaction.options.getString("archive");
     const archiveFile = interaction.options.getAttachment("archive_file");
-    const fanpage = fanpageURL;
 
     // Prioritize archive_file over archive URL
     const archiveUrl = archiveFile ? archiveFile.url : archive;
@@ -120,7 +118,6 @@ module.exports = {
         url: archiveFile ? null : archiveUrl,
         required: false,
       }, // Skip if it's a file attachment
-      { name: "fanpage", url: fanpage, required: false },
     ];
 
     const validatedUrls = {};
@@ -165,7 +162,6 @@ module.exports = {
       link3: validatedUrls.link3,
       cover: coverAttachment ? coverAttachment.url : null,
       archive: archiveFile ? archiveFile.url : validatedUrls.archive,
-      fanpage: validatedUrls.fanpage,
     });
 
     // Send the announcement

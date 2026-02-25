@@ -13,9 +13,10 @@ const { EmbedBuilder } = require("discord.js");
  * @param {string} options.fanpage - Fanpage link
  * @returns {EmbedBuilder} - The embedded message
  */
+
+const { translationTeamURL, fanpageURL } = require("../config.json");
 function createAnnouncementEmbed(options) {
-  const { title, description, link1, link2, link3, cover, archive, fanpage } =
-    options;
+  const { title, description, link1, link2, link3, cover, archive } = options;
 
   const embed = new EmbedBuilder()
     .setColor("#ba30ff") // Discord blurple color
@@ -53,22 +54,23 @@ function createAnnouncementEmbed(options) {
   }
 
   // Add archive and fanpage as inline fields
-  if (archive || fanpage) {
-    if (archive) {
-      embed.addFields({
-        name: "📦 Archive",
-        value: `[Xem archive](${archive})`,
-        inline: true,
-      });
-    }
-    if (fanpage) {
-      embed.addFields({
-        name: "👥 Liên hệ",
-        value: `[Phan pếch chúng tôi](${fanpage})`,
-        inline: true,
-      });
-    }
+  if (archive) {
+    embed.addFields({
+      name: "📦 Archive",
+      value: `[Xem archive](${archive})`,
+      inline: true,
+    });
   }
+  embed.addFields({
+    name: "👥 Liên hệ",
+    value: `[Phan pếch chúng tôi](${fanpageURL})`,
+    inline: true,
+  });
+  embed.addFields({
+    name: "👥 Truyện khác",
+    value: `[Nhóm chúng tôi trên vi-h](${translationTeamURL})`,
+    inline: true,
+  });
 
   return embed;
 }
