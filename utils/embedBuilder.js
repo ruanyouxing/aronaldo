@@ -36,20 +36,20 @@ function createAnnouncementEmbed(options) {
   // Build links section
   let linksText = "";
   if (link1) {
-    linksText += `🔗 [Link số 1](${link1})\n`;
+    linksText += `🔗 [Vi-h](${link1})\n`;
   }
   if (link2) {
-    linksText += `🔗 [Link số 2](${link2})\n`;
+    linksText += `🔗 [Mimi](${link2})\n`;
   }
   if (link3) {
-    linksText += `🔗 [Link số 3](${link3})\n`;
+    linksText += `🔗 [Vinahentai](${link3})\n`;
   }
 
   if (linksText) {
     embed.addFields({
       name: "📎 Link",
       value: linksText,
-      inline: false,
+      inline: true,
     });
   }
 
