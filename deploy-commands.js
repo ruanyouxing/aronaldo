@@ -1,5 +1,7 @@
+require("dotenv").config();
+const token = process.env.token;
 const { REST, Routes } = require("discord.js");
-const { token, clientId, serverId } = require("./config.json");
+const { clientId, serverId } = require("./config.json");
 const fs = require("fs");
 const path = require("path");
 
@@ -20,7 +22,7 @@ for (const file of commandFiles) {
     console.log(`✅ Loaded command: ${command.data.name}`);
   } else {
     console.log(
-      `⚠️  The command at ${filePath} is missing "data" or "execute" property.`
+      `⚠️  The command at ${filePath} is missing "data" or "execute" property.`,
     );
   }
 }
@@ -31,7 +33,7 @@ const rest = new REST().setToken(token);
 (async () => {
   try {
     console.log(
-      `🚀 Started refreshing ${commands.length} application (/) commands.`
+      `🚀 Started refreshing ${commands.length} application (/) commands.`,
     );
 
     // Register commands globally (takes up to 1 hour to propagate)
@@ -40,12 +42,12 @@ const rest = new REST().setToken(token);
       Routes.applicationGuildCommands(clientId, serverId),
       {
         body: commands,
-      }
+      },
     );
 
-    console.log(
-      `✅ Successfully reloaded ${data.length} application (/) commands.`
-    );
+    // console.log(
+    //   `✅ Successfully reloaded ${data.length} application (/) commands.`,
+    // );
   } catch (error) {
     console.error("❌ Error deploying commands:", error);
   }

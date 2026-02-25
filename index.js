@@ -1,5 +1,6 @@
 const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
-const { token } = require("./config.json");
+require("dotenv").config();
+const token = process.env.token;
 const fs = require("fs");
 const path = require("path");
 

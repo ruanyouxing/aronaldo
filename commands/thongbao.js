@@ -13,10 +13,7 @@ module.exports = {
     .setName("thongbao")
     .setDescription("Đăng thông báo cho các sếch thủ")
     .addStringOption((option) =>
-      option
-        .setName("title")
-        .setDescription("Tiêu đề")
-        .setRequired(true),
+      option.setName("title").setDescription("Tiêu đề").setRequired(true),
     )
     .addStringOption((option) =>
       option
@@ -49,10 +46,7 @@ module.exports = {
         .setRequired(false),
     )
     .addAttachmentOption((option) =>
-      option
-        .setName("cover")
-        .setDescription("File ảnh bìa")
-        .setRequired(false),
+      option.setName("cover").setDescription("File ảnh bìa").setRequired(false),
     )
     .addStringOption((option) =>
       option
