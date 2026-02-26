@@ -10,24 +10,21 @@ module.exports = {
     .setName("batchuoc")
     .setDescription("Rô vẹt")
     .addStringOption((option) =>
-      option
-        .setName("text")
-        .setDescription("Tin nhắn gì đó")
-        .setRequired(false),
+      option.setName("text").setDescription("Tin nhắn gì đó").setRequired(false)
     )
     .addAttachmentOption((option) =>
       option
         .setName("attachment")
         .setDescription("File đính kèm")
-        .setRequired(false),
+        .setRequired(false)
     ),
 
   async execute(interaction) {
     const isAdmin = interaction.member.permissions.has(
-      PermissionFlagsBits.Administrator,
+      PermissionFlagsBits.Administrator
     );
     const hasPrivilegedRole = interaction.member.roles.cache.some(
-      (role) => role.id === ROLE_ID,
+      (role) => role.id === ROLE_ID
     );
 
     if (!isAdmin && !hasPrivilegedRole) {
@@ -70,11 +67,11 @@ module.exports = {
       ];
     }
     const outputChannel = interaction.guild.channels.cache.find(
-      (ch) => ch.id === ANNOUNCEMENT_CHANNEL_ID,
+      (ch) => ch.id === ANNOUNCEMENT_CHANNEL_ID
     );
     if (!outputChannel) {
       return interaction.reply({
-        content: `❌ Không tìm thấy kênh <#${ANNOUNCEMENT_CHANNEL_ID}> channel`,
+        content: `❌ Không tìm thấy kênh <#${ANNOUNCEMENT_CHANNEL_ID}>`,
         ephemeral: true,
       });
     }
@@ -83,7 +80,7 @@ module.exports = {
 
       // 5. Silently complete the interaction so Discord doesn't show an error
       await interaction.reply({
-        content: "✅ Đã nhép thành công!",
+        content: `✅ Đã nhép thành công trên kênh <#${ANNOUNCEMENT_CHANNEL_ID}>!`,
         ephemeral: true,
       });
     } catch (error) {
