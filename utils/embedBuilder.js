@@ -57,13 +57,13 @@ function createAnnouncementEmbed(options) {
   if (archive) {
     embed.addFields({
       name: "📦 Archive",
-      value: `[Xem archive](${archive})`,
+      value: `[Xem archive truyện](${archive})`,
       inline: true,
     });
   }
   embed.addFields({
     name: "📚 Truyện khác",
-    value: `[Nhóm chúng tôi trên vi-h](${translationTeamURL})`,
+    value: `[Những truyện khác chúng tôi làm](${translationTeamURL})`,
     inline: false,
   });
   embed.addFields({
