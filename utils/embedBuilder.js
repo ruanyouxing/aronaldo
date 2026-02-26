@@ -49,7 +49,7 @@ function createAnnouncementEmbed(options) {
     embed.addFields({
       name: "📎 Link",
       value: linksText,
-      inline: true,
+      inline: false,
     });
   }
 
@@ -62,13 +62,13 @@ function createAnnouncementEmbed(options) {
     });
   }
   embed.addFields({
-    name: "👥 Liên hệ",
-    value: `[Phan pếch chúng tôi](${fanpageURL})`,
-    inline: true,
+    name: "📚 Truyện khác",
+    value: `[Nhóm chúng tôi trên vi-h](${translationTeamURL})`,
+    inline: false,
   });
   embed.addFields({
-    name: "👥 Truyện khác",
-    value: `[Nhóm chúng tôi trên vi-h](${translationTeamURL})`,
+    name: "👥 Liên hệ",
+    value: `[Phan pếch chúng tôi](${fanpageURL})`,
     inline: true,
   });
 
