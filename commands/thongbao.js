@@ -159,12 +159,10 @@ module.exports = {
     });
 
     let announcementContent = {
+      files : outOfEmbed ? [coverAttachment] : null,
       content : caption ? caption :null,
       embeds: [embed],
     };
-    if (outOfEmbed) {
-      Object.assign(announcementContent, {files : [coverAttachment]});
-    }
     // Send the announcement
     try {
       await outputChannel.send(announcementContent);
