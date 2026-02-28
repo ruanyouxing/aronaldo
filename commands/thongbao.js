@@ -16,8 +16,8 @@ module.exports = {
     )
     .addStringOption((option) =>
       option
-        .setName("ping")
-        .setDescription("Có ping ai không?")
+        .setName("caption")
+        .setDescription("Viết caption cho tin nhắn (có thể ping người khác bằng biến này)")
         .setRequired(false),
     )
     .addStringOption((option) =>
@@ -38,6 +38,9 @@ module.exports = {
     .addAttachmentOption((option) =>
       option.setName("cover").setDescription("File ảnh bìa").setRequired(false),
     )
+      .addBooleanOption(option =>
+      option.setName("out_of_embed").setDescription("Ảnh bìa có nằm ngoài embed không?").setRequired(false),
+      )
     .addStringOption((option) =>
       option
         .setName("archive")
@@ -62,7 +65,7 @@ module.exports = {
 
     if (!isAdmin && !hasPrivilegedRole) {
       return interaction.reply({
-        content: `❌ Bạn không có quyền sử dụng câu lệnh này. Bạn phải là chủ pếch hoặc <@&${ROLE_ID}>.`,
+        content: `❌ Chưa tày đâu. Bạn phải là chủ pếch hoặc <@&${ROLE_ID}>.`,
         ephemeral: true,
       });
     }
@@ -80,7 +83,8 @@ module.exports = {
     const link2 = interaction.options.getString("mimi");
     const link3 = interaction.options.getString("vinah");
     const coverAttachment = interaction.options.getAttachment("cover");
-    const ping = interaction.options.getString("ping");
+    const outOfEmbed = interaction.options.getBoolean("out_of_embed") ? interaction.options.getBoolean("out_of_embed") : false;
+    const caption = interaction.options.getString("caption");
     // if (coverAttachment) {
     //   if (
     //     !coverAttachment.contentType ||
@@ -151,14 +155,19 @@ module.exports = {
       link3: validatedUrls.link3,
       cover: coverAttachment ? coverAttachment.url : null,
       archive: archiveFile ? archiveFile.url : validatedUrls.archive,
+      outOfEmbed: outOfEmbed,
     });
 
+    let announcementContent = {
+      content : caption ? caption :null,
+      embeds: [embed],
+    };
+    if (outOfEmbed) {
+      Object.assign(announcementContent, {files : [coverAttachment]});
+    }
     // Send the announcement
     try {
-      await outputChannel.send({
-        content: ping ? ping : null,
-        embeds: [embed],
-      });
+      await outputChannel.send(announcementContent);
 
       // Confirm success to the user (ephemeral)
       await interaction.reply({

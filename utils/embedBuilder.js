@@ -16,7 +16,7 @@ const { EmbedBuilder } = require("discord.js");
 
 const { translationTeamURL, fanpageURL } = require("../config.json");
 function createAnnouncementEmbed(options) {
-  const { title, description, link1, link2, link3, cover, archive } = options;
+  const { title, description, link1, link2, link3, cover, archive, outOfEmbed } = options;
 
   const embed = new EmbedBuilder()
     .setColor("#ba30ff") // Discord blurple color
@@ -28,8 +28,7 @@ function createAnnouncementEmbed(options) {
     embed.setDescription(description);
   }
 
-  // Add cover image if provided
-  if (cover) {
+  if (cover && !outOfEmbed) {
     embed.setImage(cover);
   }
 
