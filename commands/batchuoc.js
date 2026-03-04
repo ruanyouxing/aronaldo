@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ChannelType,
+} = require("discord.js");
 const {
   COMMAND_CHANNEL_ID,
   ANNOUNCEMENT_CHANNEL_ID,
@@ -17,6 +21,13 @@ module.exports = {
         .setName("attachment")
         .setDescription("File đính kèm")
         .setRequired(false)
+    )
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("Chọn kênh để đăng")
+        .setRequired(false)
+        .addChannelTypes(ChannelType.GuildAnnouncement)
     ),
 
   async execute(interaction) {
@@ -30,13 +41,13 @@ module.exports = {
     if (!isAdmin && !hasPrivilegedRole) {
       return interaction.reply({
         content: `❌ Bạn không có quyền sử dụng câu lệnh này. Bạn phải là chủ pếch hoặc <@&${ROLE_ID}>.`,
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
     if (interaction.channel.id !== COMMAND_CHANNEL_ID) {
       return interaction.reply({
         content: `❌ Bạn chỉ có thể thông báo từ kênh <#${COMMAND_CHANNEL_ID}>`,
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
     const text = interaction.options.getString("text");
@@ -46,7 +57,7 @@ module.exports = {
     if (!text && !attachment) {
       return interaction.reply({
         content: "❌ quắt đờ phắc, có gì đâu mà nhép",
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
 
@@ -66,13 +77,13 @@ module.exports = {
         },
       ];
     }
-    const outputChannel = interaction.guild.channels.cache.find(
-      (ch) => ch.id === ANNOUNCEMENT_CHANNEL_ID
-    );
+    const outputChannel =
+      interaction.options.getChannel("channel") ??
+      interaction.guild.channels.cache.get(ANNOUNCEMENT_CHANNEL_ID);
     if (!outputChannel) {
       return interaction.reply({
-        content: `❌ Không tìm thấy kênh <#${ANNOUNCEMENT_CHANNEL_ID}>`,
-        ephemeral: true,
+        content: `❌ Không tìm thấy kênh thông báo! Kênh mặc định là <#${ANNOUNCEMENT_CHANNEL_ID}>`,
+        // ephemeral: true,
       });
     }
     try {
@@ -80,8 +91,8 @@ module.exports = {
 
       // 5. Silently complete the interaction so Discord doesn't show an error
       await interaction.reply({
-        content: `✅ Đã nhép thành công trên kênh <#${ANNOUNCEMENT_CHANNEL_ID}>!`,
-        ephemeral: true,
+        content: `✅ Đã nhép thành công trên kênh <#${outputChannel.id}>!`,
+        // ephemeral: true,
       });
     } catch (error) {
       console.error("Mimic error:", error);
@@ -90,7 +101,7 @@ module.exports = {
       if (!interaction.replied) {
         await interaction.reply({
           content: "❌ Lỗi",
-          ephemeral: true,
+          // ephemeral: true,
         });
       }
     }

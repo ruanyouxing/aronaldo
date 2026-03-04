@@ -53,7 +53,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     const errorMessage = {
       content: "❌ Có lỗi xảy ra khi thực thi câu lệnh!",
-      ephemeral: true,
+      // ephemeral: true,
     };
 
     if (interaction.replied || interaction.deferred) {

@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ChannelType,
+} = require("discord.js");
 const {
   COMMAND_CHANNEL_ID,
   ANNOUNCEMENT_CHANNEL_ID,
@@ -12,68 +16,79 @@ module.exports = {
     .setName("thongbao")
     .setDescription("Đăng thông báo cho các sếch thủ")
     .addStringOption((option) =>
-      option.setName("title").setDescription("Tiêu đề").setRequired(true),
+      option.setName("title").setDescription("Tiêu đề").setRequired(true)
+    )
+    .addChannelOption((option) =>
+      option
+        .setName("channel")
+        .setDescription("Kênh thông báo")
+        .addChannelTypes(ChannelType.GuildAnnouncement)
     )
     .addStringOption((option) =>
       option
         .setName("caption")
-        .setDescription("Viết caption cho tin nhắn (có thể ping người khác bằng biến này)")
-        .setRequired(false),
+        .setDescription(
+          "Viết caption cho tin nhắn (có thể ping người khác bằng biến này)"
+        )
+        .setRequired(false)
     )
     .addStringOption((option) =>
       option
         .setName("description")
         .setDescription("Nội dung/mô tả")
-        .setRequired(false),
+        .setRequired(false)
     )
     .addStringOption((option) =>
-      option.setName("vi-h").setDescription("Link vi-h").setRequired(false),
+      option.setName("vi-h").setDescription("Link vi-h").setRequired(false)
     )
     .addStringOption((option) =>
-      option.setName("mimi").setDescription("Link mimi").setRequired(false),
+      option.setName("mimi").setDescription("Link mimi").setRequired(false)
     )
     .addStringOption((option) =>
-      option.setName("vinah").setDescription("Link vina").setRequired(false),
+      option.setName("vinah").setDescription("Link vina").setRequired(false)
     )
     .addAttachmentOption((option) =>
-      option.setName("cover").setDescription("File ảnh bìa").setRequired(false),
+      option.setName("cover").setDescription("File ảnh bìa").setRequired(false)
     )
-      .addBooleanOption(option =>
-      option.setName("out_of_embed").setDescription("Ảnh bìa có nằm ngoài embed không?").setRequired(false),
-      )
+    .addBooleanOption((option) =>
+      option
+        .setName("out_of_embed")
+        .setDescription("Ảnh bìa có nằm ngoài embed không?")
+        .setRequired(false)
+    )
     .addStringOption((option) =>
       option
         .setName("archive")
         .setDescription("Link archive Google Drive")
-        .setRequired(false),
+        .setRequired(false)
     )
     .addAttachmentOption((option) =>
       option
         .setName("archive_file")
         .setDescription("Hoặc file rar")
-        .setRequired(false),
+        .setRequired(false)
     ),
 
   async execute(interaction) {
-    // Check permissions: Admin or privileged role
+    await interaction.deferReply(); // Check permissions: Admin or privileged role
     const isAdmin = interaction.member.permissions.has(
-      PermissionFlagsBits.Administrator,
+      PermissionFlagsBits.Administrator
     );
     const hasPrivilegedRole = interaction.member.roles.cache.some(
-      (role) => role.id === ROLE_ID,
+      (role) => role.id === ROLE_ID
     );
 
     if (!isAdmin && !hasPrivilegedRole) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Chưa tày đâu. Bạn phải là chủ pếch hoặc <@&${ROLE_ID}>.`,
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
     // Check if command is used in the correct channel
     if (interaction.channel.id !== COMMAND_CHANNEL_ID) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Bạn chỉ có thể thông báo từ kênh <#${COMMAND_CHANNEL_ID}>`,
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
     // Get all parameters
@@ -83,7 +98,9 @@ module.exports = {
     const link2 = interaction.options.getString("mimi");
     const link3 = interaction.options.getString("vinah");
     const coverAttachment = interaction.options.getAttachment("cover");
-    const outOfEmbed = interaction.options.getBoolean("out_of_embed") ? interaction.options.getBoolean("out_of_embed") : false;
+    const outOfEmbed = interaction.options.getBoolean("out_of_embed")
+      ? interaction.options.getBoolean("out_of_embed")
+      : false;
     const caption = interaction.options.getString("caption");
     // if (coverAttachment) {
     //   if (
@@ -96,10 +113,25 @@ module.exports = {
     //     });
     //   }
     // }
-    if (!link1 && !link2 && !link3) {
-      return interaction.reply({
+    const outputChannel =
+      interaction.options.getChannel("channel") ??
+      interaction.guild.channels.cache.get(ANNOUNCEMENT_CHANNEL_ID);
+
+    if (!outputChannel) {
+      return interaction.editReply({
+        content: `❌ Không tìm thấy kênh thông báo ! Kênh mặc định là <#${ANNOUNCEMENT_CHANNEL_ID}>`,
+        // ephemeral: true,
+      });
+    }
+    if (
+      !link1 &&
+      !link2 &&
+      !link3 &&
+      outputChannel.id === ANNOUNCEMENT_CHANNEL_ID
+    ) {
+      return interaction.editReply({
         content: `❌ Link đâu anh?`,
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
     const archive = interaction.options.getString("archive");
@@ -126,25 +158,15 @@ module.exports = {
 
       const result = validateUrl(url);
       if (!result.valid) {
-        return interaction.reply({
+        return interaction.editReply({
           content: `❌ URL không hợp lệ ${name}: ${result.error}`,
-          ephemeral: true,
+          // ephemeral: true,
         });
       }
       validatedUrls[name] = result.url;
     }
 
     // Find the output channel
-    const outputChannel = interaction.guild.channels.cache.find(
-      (ch) => ch.id === ANNOUNCEMENT_CHANNEL_ID,
-    );
-
-    if (!outputChannel) {
-      return interaction.reply({
-        content: `❌ Không tìm thấy kênh <#${ANNOUNCEMENT_CHANNEL_ID}> channel`,
-        ephemeral: true,
-      });
-    }
 
     // Create the embedded announcement
     const embed = createAnnouncementEmbed({
@@ -159,24 +181,27 @@ module.exports = {
     });
 
     let announcementContent = {
-      files : outOfEmbed ? [coverAttachment] : null,
-      content : caption ? caption :null,
+      files: outOfEmbed ? [coverAttachment] : null,
+      content: caption ? caption : null,
       embeds: [embed],
     };
+    if (outOfEmbed && coverAttachment) {
+      announcementContent.files = [coverAttachment];
+    }
     // Send the announcement
     try {
       await outputChannel.send(announcementContent);
 
-      // Confirm success to the user (ephemeral)
-      await interaction.reply({
-        content: `✅ Thông báo đã được đăng thành công lên kênh <#${ANNOUNCEMENT_CHANNEL_ID}>!`,
-        ephemeral: true,
+      // Confirm success to the user
+      await interaction.editReply({
+        content: `✅ Thông báo đã được đăng thành công lên kênh <#${outputChannel.id}>!`,
+        // ephemeral: true,
       });
     } catch (error) {
       console.error("Error posting announcement:", error);
-      await interaction.reply({
+      await interaction.editReply({
         content: "❌ Đăng thông báo thất bại. Xin hãy thử lại.",
-        ephemeral: true,
+        // ephemeral: true,
       });
     }
   },
