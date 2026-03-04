@@ -19,7 +19,7 @@ function createAnnouncementEmbed(options) {
   const { title, description, link1, link2, link3, cover, archive, outOfEmbed } = options;
 
   const embed = new EmbedBuilder()
-    .setColor("#ba30ff") // Discord blurple color
+    .setColor("#ba30ff") // Purple
     .setTitle(title)
     .setTimestamp();
 

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require("discord.js");
 const {
     COMMAND_CHANNEL_ID,
     ANNOUNCEMENT_CHANNEL_ID,
@@ -13,8 +13,15 @@ module.exports = {
         .setName("edit")
         .setDescription("Chỉnh sửa một thông báo đã đăng")
         .addStringOption((option) =>
-            option.setName("message_id").setDescription("ID của tin nhắn cần sửa").setRequired(true),
+            option.setName("message_id").setDescription("ID của tin nhắn cần sửa").
+
+            setRequired(true),
         )
+        .addChannelOption((option) =>
+                option.setName("channel").setDescription("Kênh chứa tin nhắn cần sửa")
+                    .addChannelTypes(ChannelType.GuildAnnouncement)
+                    .setRequired(true),
+            )
         .addStringOption((option) =>
             option.setName("title").setDescription("Tiêu đề mới").setRequired(false),
         )
@@ -60,7 +67,7 @@ module.exports = {
 
     async execute(interaction) {
         // Sử dụng deferReply để có thêm thời gian xử lý và tìm tin nhắn
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply();
 
         // 1. Kiểm tra quyền hạn (Giống y hệt lệnh thongbao)
         const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
@@ -75,10 +82,10 @@ module.exports = {
         }
 
         const messageId = interaction.options.getString("message_id");
-        const outputChannel = interaction.guild.channels.cache.find((ch) => ch.id === ANNOUNCEMENT_CHANNEL_ID);
+        const outputChannel = interaction.options.getChannel("channel");
 
         if (!outputChannel) {
-            return interaction.editReply({ content: `❌ Không tìm thấy kênh <#${ANNOUNCEMENT_CHANNEL_ID}> channel` });
+            return interaction.editReply({ content: `❌ Không tìm thấy kênh thông báo!` });
         }
 
         try {
@@ -218,7 +225,7 @@ module.exports = {
 
             await targetMessage.edit(editPayload);
 
-            await interaction.editReply({ content: `✅ Đã chỉnh sửa thành công tin nhắn tại https://discord.com/channels/${serverId}/${ANNOUNCEMENT_CHANNEL_ID}/${messageId} !` });
+            await interaction.editReply({ content: `✅ Đã chỉnh sửa thành công tin nhắn tại https://discord.com/channels/${serverId}/${outputChannel.id}/${messageId} !` });
 
         } catch (error) {
             console.error("Error editing announcement:", error);
