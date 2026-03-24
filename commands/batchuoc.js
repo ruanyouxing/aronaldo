@@ -31,6 +31,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    await interaction.deferReply();
     const isAdmin = interaction.member.permissions.has(
       PermissionFlagsBits.Administrator
     );
@@ -39,13 +40,13 @@ module.exports = {
     );
 
     if (!isAdmin && !hasPrivilegedRole) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Bạn không có quyền sử dụng câu lệnh này. Bạn phải là chủ pếch hoặc <@&${ROLE_ID}>.`,
         // ephemeral: true,
       });
     }
     if (interaction.channel.id !== COMMAND_CHANNEL_ID) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Bạn chỉ có thể thông báo từ kênh <#${COMMAND_CHANNEL_ID}>`,
         // ephemeral: true,
       });
@@ -55,7 +56,7 @@ module.exports = {
 
     // 1. Prevent the bot from crashing if the user provides absolutely nothing
     if (!text && !attachment) {
-      return interaction.reply({
+      return interaction.editReply({
         content: "❌ quắt đờ phắc, có gì đâu mà nhép",
         // ephemeral: true,
       });
@@ -70,18 +71,13 @@ module.exports = {
 
     // 3. Handle the attachment by passing it into Discord's 'files' array
     if (attachment) {
-      payload.files = [
-        {
-          attachment: attachment.url,
-          name: attachment.name, // Keeps the original filename
-        },
-      ];
+      payload.files = [attachment];
     }
     const outputChannel =
       interaction.options.getChannel("channel") ??
       interaction.guild.channels.cache.get(ANNOUNCEMENT_CHANNEL_ID);
     if (!outputChannel) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Không tìm thấy kênh thông báo! Kênh mặc định là <#${ANNOUNCEMENT_CHANNEL_ID}>`,
         // ephemeral: true,
       });
@@ -90,7 +86,7 @@ module.exports = {
       await outputChannel.send(payload);
 
       // 5. Silently complete the interaction so Discord doesn't show an error
-      await interaction.reply({
+      await interaction.editReply({
         content: `✅ Đã nhép thành công trên kênh <#${outputChannel.id}>!`,
         // ephemeral: true,
       });
@@ -99,7 +95,7 @@ module.exports = {
 
       // Safety net in case the bot lacks permissions to send messages or files
       if (!interaction.replied) {
-        await interaction.reply({
+        await interaction.editReply({
           content: "❌ Lỗi",
           // ephemeral: true,
         });
