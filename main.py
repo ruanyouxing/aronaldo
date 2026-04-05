@@ -6,7 +6,6 @@ from discord.ext import commands, tasks
 from func import *
 import asyncio
 import io
-import json
 import os
 
 intents = discord.Intents.default()
@@ -55,12 +54,12 @@ async def on_message(message):
                 reason="Auto ban, nghịch ngu thì liên hệ admin",
                 delete_message_seconds=3600
             )
-            temp_ban[str(message.guild.id)] = temp_ban.get(str(message.guild.id), []) + [[member.id, time.time() + temp_ban_time]]
+            temp_ban[str(message.guild.id)] = temp_ban.get(str(message.guild.id), []) + [[member.id, get_time() + temp_ban_time]]
             await save_temp_ban(temp_ban)
 
     if message.content.startswith(">batchuoc"):
         try:
-            if not message.channel.id == announ_channel:
+            if message.channel.id != announ_channel:
                 return
             if not message.channel_mentions:
                 return
