@@ -3,93 +3,35 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+from func import *
 import asyncio
 import io
 import json
-import time
 import datetime
 import os
-import re
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-
 cabin_channel = 1475822549710405725
 announ_channel = 1475822549710405725
 bait_channel = 1489223836724498432
 sech_thu = 1381552685760643202
 whitelist = [1223306000061432018]
+
 temp_ban_time = 100*3600
-
 unban_checking = False
-
-try:
-    with open('temp_ban.json', 'r') as f:
-        temp_ban = json.load(f)
-except:
-    temp_ban = {}
-
-lock = asyncio.Lock()
-
-async def save_temp_ban():
-    async with lock:
-        with open('temp_ban.json', 'w') as f:
-            json.dump(temp_ban, f, indent=4)
-
-def split_message(text, limit=2000):
-    parts = []
-    while len(text) > limit:
-        split_at = text.rfind(" ", 0, limit)
-        if split_at == -1:
-            split_at = limit
-        parts.append(text[:split_at])
-        text = text[split_at:].lstrip()
-    parts.append(text)
-    return parts
-
-def create_embed(title, description, links, archive, archive_file):
-    urls = ''
-    web = ['vi-h', 'mimi', 'vina']
-    for link in links.split():
-        for w in web:
-            if w in link:
-                urls += f'🔗 [{w}]({link})\n'
-
-    emb = discord.Embed(
-        title = title,
-        description = description,
-        color = 0xba30ff,
-        timestamp=datetime.datetime.now(datetime.timezone.utc)
-        )
-    if urls:
-        emb.add_field(name='📎 Link', value=urls, inline=False)
-    if archive:
-        emb.add_field(name='📦 Archive', value=f'[Xem archive truyện]({archive})', inline=False)
-    if archive_file:
-        emb.add_field(name='📦 Archive', value='File ở bên dưới', inline=False)
-    emb.add_field(name='📚 Truyện khác', value='[Những truyện khác chúng tôi làm](https://vi-hentai.pro/nhom-dich/eden-of-kivotos)', inline=False)
-    emb.add_field(name='👥 Liên hệ', value='[Phan pếch chúng tôi](https://www.facebook.com/EdenOfKivotos7)', inline=False)
-    return emb
-
-async def unban(guild_id, id, t):
-    try:
-        guild = bot.get_guild(int(guild_id))
-        user = discord.Object(id=id)
-        await guild.unban(user)
-    finally:
-        temp_ban[guild_id].remove([id, t])
-        await save_temp_ban()
+temp_ban = load_temp_ban()
 
 @tasks.loop(seconds=10)
 async def check_unban():
-    time_now = time.time()
+    time_now = datetime.now().timestamp()
     for guild in temp_ban:
         for id, t in temp_ban[guild].copy():
             if t < time_now:
-                asyncio.create_task(unban(guild, id, t))
+                asyncio.create_task(unban(temp_ban, bot, guild, id, t))
 
 @bot.event
 async def on_ready():
@@ -115,7 +57,7 @@ async def on_message(message):
                 delete_message_seconds=3600
             )
             temp_ban[str(message.guild.id)] = temp_ban.get(str(message.guild.id), []) + [[member.id, time.time() + temp_ban_time]]
-            await save_temp_ban()
+            await save_temp_ban(temp_ban)
 
     if message.content.startswith(">batchuoc"):
         try:
@@ -218,29 +160,13 @@ async def edit(
     guild_id = int(parts[-3])
     channel_id = int(parts[-2])
     message_id = int(parts[-1])
+
     channel = bot.get_channel(channel_id)
     if channel is None:
         channel = await bot.fetch_channel(channel_id)
 
     message = await channel.fetch_message(message_id)
-    emb = message.embeds[0]
-    data = {
-        "title": emb.title,
-        "description": emb.description,
-        "links": '',
-        "archive": '',
-        "archive_file": False
-    }
-    for field in emb.fields:
-        name = field.name.strip()
-        value = field.value.strip()
-
-        if name == "📎 Link":
-            data["links"] = ' '.join(re.findall(r'\((.*?)\)', value))
-        elif name == "📦 Archive" and "http" in value:
-            data["archive"] = re.findall(r'\((.*?)\)', value)[0]
-        elif name == "📦 Archive" and value == "File ở bên dưới":
-            data["archive_file"] = True
+    data = get_embed_data(message.embeds[0])
 
     for k in edit_check:
         if edit_check[k] == '.':
@@ -257,6 +183,7 @@ async def edit(
         content = message.content
 
     emb = create_embed(*data.values())
+
     await message.edit(content=content, embed=emb)
     await interaction.response.send_message(embed=discord.Embed(title="Đã chỉnh sửa thành công!", color=0x00ff00))
 
