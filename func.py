@@ -27,6 +27,9 @@ def load_temp_ban():
     except:
         return {}
 
+def get_time():
+    return datetime.datetime.now().timestamp()
+
 def split_message(text, limit=2000):
     parts = []
     while len(text) > limit:

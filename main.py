@@ -7,7 +7,6 @@ from func import *
 import asyncio
 import io
 import json
-import datetime
 import os
 
 intents = discord.Intents.default()
@@ -27,7 +26,7 @@ temp_ban = load_temp_ban()
 
 @tasks.loop(seconds=10)
 async def check_unban():
-    time_now = datetime.datetime.now().timestamp()
+    time_now = get_time()
     for guild in temp_ban:
         for id, t in temp_ban[guild].copy():
             if t < time_now:
