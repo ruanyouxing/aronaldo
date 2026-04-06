@@ -8,7 +8,7 @@ from utils import *
 import asyncio
 import io
 import os
-
+from dotenv import load_dotenv
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -178,6 +178,7 @@ async def edit(
     await message.edit(content=content, embed=emb)
     await interaction.response.send_message(embed=discord.Embed(title="Đã chỉnh sửa thành công!", color=0x00ff00))
 
+load_dotenv()
 bot.run(os.getenv('TOKEN'))
 
 '''dev by caophihung'''
