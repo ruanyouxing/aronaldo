@@ -25,18 +25,11 @@ cabin_channel, announ_channel, bait_channel, sech_thu, whitelist, temp_ban_time 
     data["temp_ban_time"]
 )
 unban_checking = False
-temp_ban = load_temp_ban()
-
-ban.temp_ban = temp_ban
 ban.bot = bot
 
 @tasks.loop(seconds=10)
-async def check_unban():
-    time_now = get_time()
-    for guild in temp_ban:
-        for id, t in temp_ban[guild].copy():
-            if t < time_now:
-                asyncio.create_task(unban(guild, id, t))
+async def check_loop():
+    await check_unban(get_time(), temp_ban_time)
 
 @bot.event
 async def on_ready():
@@ -45,7 +38,7 @@ async def on_ready():
     print(f'Bot đã đăng nhập với tên {bot.user}')
     if not unban_checking:
         unban_checking = True
-        check_unban.start()
+        check_loop.start()
 
 @bot.event
 async def on_message(message):
@@ -55,18 +48,11 @@ async def on_message(message):
 
     if message.channel.id == bait_channel:
         if not (member.id in whitelist or member.top_role >= message.guild.me.top_role):
-            await member.send("Auto ban, nghịch ngu thì liên hệ admin")
-            await message.guild.ban(
-                member,
-                reason="Auto ban, nghịch ngu thì liên hệ admin",
-                delete_message_seconds=3600
-            )
-            temp_ban[str(message.guild.id)] = temp_ban.get(str(message.guild.id), []) + [[member.id, get_time() + temp_ban_time]]
-            await save_temp_ban()
+            await ban_user(message.guild, member, get_time())
 
     if message.content.startswith(">batchuoc"):
         try:
-            if message.channel.id != announ_channel:
+            if message.channel.id != cabin_channel:
                 return
             if not message.channel_mentions:
                 return
@@ -132,7 +118,7 @@ async def thongbao(
 
     await channel.send(caption, embed=emb, file=img)
     await channel.send(file=await archive_file.to_file()) if archive_file else None
-    await interaction.followup.send(embed=discord.Embed(title="Đã gửi thông báo thành công!", color=0x00ff00))
+    await interaction.followup.send(embed=discord.Embed(title="Đã gửi thông báo thành công vào channel " + channel.mention, color=0x00ff00))
 
 @bot.tree.command(name="edit", description="Chỉnh sửa thông báo")
 @app_commands.describe(

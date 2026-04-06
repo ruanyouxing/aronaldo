@@ -27,6 +27,7 @@ def create_embed(title, description, links, archive, archive_file):
         emb.add_field(name='📦 Archive', value='File ở bên dưới', inline=False)
     emb.add_field(name='📚 Truyện khác', value='[Những truyện khác chúng tôi làm](https://vi-hentai.pro/nhom-dich/eden-of-kivotos)', inline=False)
     emb.add_field(name='👥 Liên hệ', value='[Phan pếch chúng tôi](https://www.facebook.com/EdenOfKivotos7)', inline=False)
+    emb.set_thumbnail(url="https://i.ibb.co/xSR04nsW/FB-IMG-1697857742354-removebg-preview.png")
     return emb
 
 def get_embed_data(emb):
