@@ -3,7 +3,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from func import *
+from utils import ban
+from utils import *
 import asyncio
 import io
 import os
@@ -13,15 +14,21 @@ intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-cabin_channel = 1475822549710405725
-announ_channel = 1475822549710405725
-bait_channel = 1489223836724498432
-sech_thu = 1381552685760643202
-whitelist = [1223306000061432018]
-
-temp_ban_time = 100*3600
+with open("./config_and_storage/config.json", "r") as f:
+    data = json.load(f)
+cabin_channel, announ_channel, bait_channel, sech_thu, whitelist, temp_ban_time = (
+    data["cabin_channel"],
+    data["announ_channel"],
+    data["bait_channel"],
+    data["sech_thu"],
+    data["whitelist"],
+    data["temp_ban_time"]
+)
 unban_checking = False
 temp_ban = load_temp_ban()
+
+ban.temp_ban = temp_ban
+ban.bot = bot
 
 @tasks.loop(seconds=10)
 async def check_unban():
@@ -29,7 +36,7 @@ async def check_unban():
     for guild in temp_ban:
         for id, t in temp_ban[guild].copy():
             if t < time_now:
-                asyncio.create_task(unban(temp_ban, bot, guild, id, t))
+                asyncio.create_task(unban(guild, id, t))
 
 @bot.event
 async def on_ready():
@@ -55,7 +62,7 @@ async def on_message(message):
                 delete_message_seconds=3600
             )
             temp_ban[str(message.guild.id)] = temp_ban.get(str(message.guild.id), []) + [[member.id, get_time() + temp_ban_time]]
-            await save_temp_ban(temp_ban)
+            await save_temp_ban()
 
     if message.content.startswith(">batchuoc"):
         try:

@@ -1,45 +1,9 @@
 import discord
-import asyncio
-import json
 import re
 import datetime
 
-lock = asyncio.Lock()
-
-async def save_temp_ban(temp_ban):
-    async with lock:
-        with open('temp_ban.json', 'w') as f:
-            json.dump(temp_ban, f, indent=4)
-
-async def unban(temp_ban, bot, guild_id, id, t):
-    try:
-        guild = bot.get_guild(int(guild_id))
-        user = discord.Object(id=id)
-        await guild.unban(user)
-    finally:
-        temp_ban[guild_id].remove([id, t])
-        await save_temp_ban(temp_ban)
-
-def load_temp_ban():
-    try:
-        with open('temp_ban.json', 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
 def get_time():
     return datetime.datetime.now().timestamp()
-
-def split_message(text, limit=2000):
-    parts = []
-    while len(text) > limit:
-        split_at = text.rfind(" ", 0, limit)
-        if split_at == -1:
-            split_at = limit
-        parts.append(text[:split_at])
-        text = text[split_at:].lstrip()
-    parts.append(text)
-    return parts
 
 def create_embed(title, description, links, archive, archive_file):
     urls = ''
