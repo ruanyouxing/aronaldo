@@ -10,16 +10,14 @@ class Aronaldo(commands.Bot):
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
-        # Đổi prefix thành '>' để lệnh batchuoc hoạt động chuẩn
         super().__init__(command_prefix=">", intents=intents)
 
     async def setup_hook(self):
-        # Load tất cả các cogs
         await self.load_extension("cogs.thongbao")
         await self.load_extension("cogs.batchuoc")
         await self.load_extension("cogs.automod")
-        
-        # Sync slash commands một lần duy nhất khi khởi động
+        await self.load_extension("cogs.edit")
+
         await self.tree.sync()
         print("Đã đồng bộ Slash Commands.")
 
