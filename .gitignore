@@ -1,0 +1,7 @@
+__pycache__/
+env
+.env
+.env_aronaldo
+.venv
+.idea
+storage/temp_ban.json
