@@ -3,4 +3,7 @@ __pycache__/
 *.py[cod]
 env
 .env
+.env_aronaldo
+.venv
+.idea
 temp_ban.json
