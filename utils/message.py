@@ -7,4 +7,4 @@ def split_message(text, limit=2000):
         parts.append(text[:split_at])
         text = text[split_at:].lstrip()
     parts.append(text)
-    return parts
+    return parts 
