@@ -17,6 +17,8 @@ class Aronaldo(commands.Bot):
         await self.load_extension("cogs.batchuoc")
         await self.load_extension("cogs.automod")
         await self.load_extension("cogs.edit")
+        self.remove_command("help")
+        await self.load_extension("cogs.help")
 
         await self.tree.sync()
         print("Đã đồng bộ Slash Commands.")
