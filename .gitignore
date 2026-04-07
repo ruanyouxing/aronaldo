@@ -1,9 +1,7 @@
-node_modules
 __pycache__/
-*.py[cod]
 env
 .env
 .env_aronaldo
 .venv
 .idea
-config_and_storage/temp_ban.json
+storage/temp_ban.json
