@@ -1,17 +1,23 @@
 import discord
 from discord.ext import commands, tasks
 import json
-from utils import ban, get_time
-
+import asyncio
+from utils import ban, get_time, save_temp_ban, unban
+from discord.ext import commands, tasks
 class automod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
         with open("./config_and_storage/config.json", "r") as f:
             data = json.load(f)
         self.bait_channel = data["bait_channel"]
         self.whitelist = data["whitelist"]
         self.temp_ban_time = data["temp_ban_time"]
-        
+
+        if hasattr(self.bot, 'temp_ban'):
+            ban.temp_ban = self.bot.temp_ban
+        ban.bot = self.bot
+
         self.check_loop.start()
 
     def cog_unload(self):

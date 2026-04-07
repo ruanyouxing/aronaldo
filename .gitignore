@@ -6,4 +6,4 @@ env
 .env_aronaldo
 .venv
 .idea
-temp_ban.json
+config_and_storage/temp_ban.json
