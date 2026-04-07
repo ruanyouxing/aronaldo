@@ -26,11 +26,19 @@ class batchuoc(commands.Cog):
         parts = split_message(content)
         if not parts: return
 
+        sent_messages = []
         for i, part in enumerate(parts):
             if i == len(parts) - 1:
-                await target.send(part, files=files)
+                msg = await target.send(part, files=files)
             else:
-                await target.send(part)
+                msg = await target.send(part)
+            sent_messages.append(msg)
+
+        if sent_messages:
+            first_msg = sent_messages[0].jump_url
+            success_embed = discord.Embed(title = f"Tin nhắn đã được gửi thành công tại {first_msg}", color = 0x2E8B57)
+            await ctx.reply(embed = success_embed)
+
 
 async def setup(bot):
     await bot.add_cog(batchuoc(bot))
