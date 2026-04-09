@@ -1,7 +1,7 @@
 import discord
 import asyncio
 import json
-
+import os
 async def save_temp_ban():
     async with lock:
         with open('./storage/temp_ban.json', 'w') as f:
@@ -9,6 +9,7 @@ async def save_temp_ban():
 
 def load_temp_ban():
     try:
+        os.makedirs("storage", exist_ok=True)
         with open('./storage/temp_ban.json', 'r') as f:
             return json.load(f)
     except:

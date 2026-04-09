@@ -1,4 +1,5 @@
 import discord
+import json
 from discord import app_commands
 from discord.ext import commands
 from utils import get_embed_data, create_embed
@@ -29,9 +30,11 @@ class EditCog(commands.Cog):
             links: str = None,
             archive: str = None,
     ):
-        cabin_channel = self.bot.config["cabin_channel"]
-        sech_thu = self.bot.config["sech_thu"]
+        with open("./config.json", "r") as f:
+            data = json.load(f)
 
+        cabin_channel = data['cabin_channel']
+        sech_thu = data['sech_thu']
         if interaction.channel_id != cabin_channel:
             return
 
