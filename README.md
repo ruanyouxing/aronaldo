@@ -8,6 +8,7 @@ Bot Discord này hỗ trợ:
 
 * Slash command `/thongbao` để gửi thông báo có embed
 * Slash command `/edit` để chỉnh sửa thông báo đã gửi
+* Slash command `/help` để xem hướng dẫn về cách lệnh
 * Prefix command `>batchuoc` để gửi lại nội dung và file đính kèm sang kênh khác
 
 ## 1) Cài đặt Python
