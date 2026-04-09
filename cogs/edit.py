@@ -4,11 +4,13 @@ from discord import app_commands
 from discord.ext import commands
 from utils import get_embed_data, create_embed
 
-
 class EditCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        with open("./config.json", "r") as f:
+            data = json.load(f)
+        self.cabin_channel = data['cabin_channel']
+        self.sech_thu = data['sech_thu']
     @app_commands.command(name="edit", description="Chỉnh sửa thông báo")
     @app_commands.describe(
         message_link='Link dẫn đến tin nhắn cần chỉnh sửa',
@@ -17,7 +19,9 @@ class EditCog(commands.Cog):
         title="Tiêu đề",
         description="Mô tả",
         links='Link của các trang, phần cách bằng dấu cách',
-        archive="Link archive"
+        cover="Ảnh bìa",
+        archive="Link archive",
+        has_cover="Có ảnh cover không"
     )
     async def edit(
             self,
@@ -28,15 +32,13 @@ class EditCog(commands.Cog):
             title: str = None,
             description: str = None,
             links: str = None,
+            cover: discord.Attachment = None,
             archive: str = None,
+            has_cover: bool = True
     ):
-        with open("./config.json", "r") as f:
-            data = json.load(f)
-
-        cabin_channel = data['cabin_channel']
-        sech_thu = data['sech_thu']
-        if interaction.channel_id != cabin_channel:
+        if interaction.channel_id != self.cabin_channel:
             return
+        await interaction.response.defer()
 
         edit_check = {
             'title': title,
@@ -62,20 +64,30 @@ class EditCog(commands.Cog):
             elif edit_check[k]:
                 data[k] = edit_check[k]
 
+        sech_thu = f'<@&{self.sech_thu}>'
         if caption == '.':
-            content = ''
-        elif caption:
-            if mention and not str(sech_thu) in caption:
-                content = f'<@&{sech_thu}> {caption}'
-            else:
-                content = caption
-        else:
+            caption = ''
+
+        if caption is None:
             content = message.content
+        else:
+            content = caption
+
+        if mention and not sech_thu in content:
+            content = f"{sech_thu} {content}"
+        elif content.startswith(sech_thu) and not mention:
+            content = content[len(sech_thu):]
 
         emb = create_embed(*data.values())
 
-        await message.edit(content=content, embed=emb)
-        await interaction.response.send_message(embed=discord.Embed(title=f"Đã chỉnh sửa thành công tin nhắn tại {message_link}!", color=0x2E8B57))
+        if cover is None and has_cover:
+            cover = message.attachments
+        elif not has_cover:
+            cover = []
+        else:
+            cover = [await cover.to_file()]    
+        await message.edit(content=content, embed=emb, attachments=cover)
+        await interaction.followup.send(embed=discord.Embed(title=f"Đã chỉnh sửa thành công tin nhắn tại {message_link}!", color=0x2E8B57))
 
 
 async def setup(bot):

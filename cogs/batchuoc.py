@@ -32,12 +32,10 @@ class batchuoc(commands.Cog):
                 msg = await target.send(part, files=files)
             else:
                 msg = await target.send(part)
-            sent_messages.append(msg)
+            sent_messages.append(msg.jump_url)
 
         if sent_messages:
-            first_msg = sent_messages[0].jump_url
-            success_embed = discord.Embed(title = f"Tin nhắn đã được gửi thành công tại {first_msg}", color = 0x2E8B57)
-            await ctx.reply(embed = success_embed)
+            await ctx.reply(embed=discord.Embed(title = f"Tin nhắn đã được gửi thành công tại {sent_messages[0]}", color = 0x2E8B57))
 
 
 async def setup(bot):

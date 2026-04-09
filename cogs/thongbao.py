@@ -43,8 +43,10 @@ class thongbao(commands.Cog):
             return
         await interaction.response.defer()
 
-        if mention and not str(self.sech_thu) in caption:
-            caption = f"<@&{self.sech_thu}> {caption}"
+        sech_thu = f'<@&{self.sech_thu}>'
+
+        if mention and not sech_thu in caption:
+            caption = f"{sech_thu} {caption}"
 
         if channel is None:
             channel = interaction.guild.get_channel(self.announ_channel)
@@ -56,11 +58,7 @@ class thongbao(commands.Cog):
         if archive_file:
             await channel.send(file=await archive_file.to_file())
 
-        success_embed = discord.Embed(
-            title=f"Đã gửi thành công thông báo tại {sent_message.jump_url}!", 
-            color=0x2E8B57
-        )
-        await interaction.followup.send(embed=success_embed)
+        await interaction.followup.send(embed=discord.Embed(title=f"Đã gửi thành công thông báo tại {sent_message.jump_url}!", color=0x2E8B57))
 
 
 async def setup(bot):
