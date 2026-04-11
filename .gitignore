@@ -5,3 +5,4 @@ env
 .venv
 .idea
 temp_ban.json
+jail.json

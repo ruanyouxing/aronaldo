@@ -3,6 +3,7 @@
 import discord
 from discord.ext import commands
 import os
+import json
 from dotenv import load_dotenv
 
 class Aronaldo(commands.Bot):
@@ -11,6 +12,8 @@ class Aronaldo(commands.Bot):
         intents.message_content = True
         intents.members = True
         super().__init__(command_prefix=">", intents=intents)
+        with open("config.json", "r") as f:
+            self.config = json.load(f)
 
     async def setup_hook(self):
         self.remove_command("help")

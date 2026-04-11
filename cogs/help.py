@@ -2,15 +2,6 @@ import discord
 from discord.ext import commands
 import json
 
-with open("config.json", "r") as f:
-    data = json.load(f)
-    sech_thu_id = data["sech_thu"]
-    announ_channel = data["announ_channel"]
-
-with open("./storage/media.json", "r") as f:
-    data = json.load(f)
-    thongbao_sample = data["thongbao_sample"]
-
 class PaginationView(discord.ui.View):
     def __init__(self, embeds: list[discord.Embed]):
         super().__init__(timeout=300)
@@ -48,8 +39,9 @@ class PaginationView(discord.ui.View):
 class help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("config.json", "r") as f:
-            self.cabin_channel = json.load(f)["cabin_channel"]
+        self.cabin_channel = self.bot.config["cabin_channel"]
+        self.sech_thu_id = self.bot.config["sech_thu"]
+        self.announ_channel = self.bot.config["announ_channel"]
 
     @commands.command(name="help", aliases=['h'])
     async def help(self, ctx, command_name: str = None):
@@ -72,17 +64,16 @@ class help(commands.Cog):
         thongbao = discord.Embed(title = "Command /thongbao")
         thongbao.add_field(name = "Cú pháp", value = "**/thongbao** `channel` `caption` `mention` `title`  ...\n ", inline = False)
         thongbao.add_field(name = "Các loại tham số", value = f"""
-        > `channel`: Kênh để gửi thông báo, mặc định là kênh <#{announ_channel}>
+        > `channel`: Kênh để gửi thông báo, mặc định là kênh <#{self.announ_channel}>
         > `caption`: Tiêu đề chính, nằm ngoài embed, khi ping được kích hoạt thì caption này sẽ hiện đầu tiên trong thông báo
-        > `mention`: Mặc định sẽ ping <@&{sech_thu_id}>, nếu đặt là False thì sẽ không tự động ping
+        > `mention`: Mặc định sẽ ping <@&{self.sech_thu_id}>, nếu đặt là False thì sẽ không tự động ping
         > `title`: Tiêu đề embed
         > `description`: Mô tả embed, dùng để viết nội dung của truyện hay gì đó
         > `links`: Link của các trang, hãy tách ra bằng dấu cách, bot chỉ xử lý các link của vi-h, mimi và vinahentai
-        > `cover`: Ảnh bìa của truyện hoặc thứ gì đó bạn muốn <@&{sech_thu_id}> thấy khi có thông báo
+        > `cover`: Ảnh bìa của truyện hoặc thứ gì đó bạn muốn <@&{self.sech_thu_id}> thấy khi có thông báo
         > `archive`: Archive truyện (dưới dạng link Google Drive hoặc tương tự)
         > `archive_file`: Archive truyện (dạng file nén hoặc pdf)
         """, inline = False)
-        thongbao.set_image(url=thongbao_sample)
         
         edit = discord.Embed(title = "Command /edit (chỉ chỉnh sửa embed)")
         edit.add_field(name="Cú pháp", value = "**/edit** `message_link` `caption` `mention` `title` ...\n ", inline = False)

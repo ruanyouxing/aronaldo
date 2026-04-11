@@ -1,18 +1,14 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import json
 from utils import create_embed, get_embed_data
-
 
 class thongbao(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("config.json", "r") as f:
-            data = json.load(f)
-        self.cabin_channel = data["cabin_channel"]
-        self.announ_channel = data["announ_channel"]
-        self.sech_thu = data["sech_thu"]
+        self.cabin_channel = self.bot.config["cabin_channel"]
+        self.announ_channel = self.bot.config["announ_channel"]
+        self.sech_thu = self.bot.config["sech_thu"]
 
     @app_commands.command(name="thongbao", description="Gửi thông báo")
     @app_commands.describe(

@@ -3,10 +3,6 @@ import re
 import datetime
 import json
 
-with open("./storage/media.json", "r") as f:
-    data = json.load(f)
-    aronaldo = data["aronaldo"]
-
 def get_time():
     return datetime.datetime.now().timestamp()
 
@@ -32,7 +28,7 @@ def create_embed(title, description, links, archive, archive_file):
         emb.add_field(name='📦 Archive', value='File ở bên dưới', inline=False)
     emb.add_field(name='📚 Truyện khác', value='[Những truyện khác chúng tôi làm](https://vi-hentai.pro/nhom-dich/eden-of-kivotos)', inline=False)
     emb.add_field(name='👥 Liên hệ', value='[Phan pếch chúng tôi](https://www.facebook.com/EdenOfKivotos7)', inline=False)
-    emb.set_thumbnail(url=aronaldo)
+    emb.set_thumbnail(url="https://i.ibb.co/HTCpvDNW/aronaldo.png")
     return emb
 
 def get_embed_data(emb):

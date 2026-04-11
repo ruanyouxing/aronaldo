@@ -1,5 +1,4 @@
 import discord
-import json
 from discord import app_commands
 from discord.ext import commands
 from utils import get_embed_data, create_embed
@@ -7,10 +6,8 @@ from utils import get_embed_data, create_embed
 class EditCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("./config.json", "r") as f:
-            data = json.load(f)
-        self.cabin_channel = data['cabin_channel']
-        self.sech_thu = data['sech_thu']
+        self.cabin_channel = self.bot.config['cabin_channel']
+        self.sech_thu = self.bot.config['sech_thu']
     @app_commands.command(name="edit", description="Chỉnh sửa thông báo")
     @app_commands.describe(
         message_link='Link dẫn đến tin nhắn cần chỉnh sửa',

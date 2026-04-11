@@ -1,14 +1,12 @@
 import discord
 from discord.ext import commands
 import io
-import json
 from utils import split_message
 
 class batchuoc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("config.json", "r") as f:
-            self.cabin_channel = json.load(f)["cabin_channel"]
+        self.cabin_channel = self.bot.config["cabin_channel"]
 
     @commands.command(name="batchuoc")
     async def batchuoc(self, ctx, target: discord.TextChannel, *, content: str = ""):
