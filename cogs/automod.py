@@ -39,7 +39,7 @@ class automod(commands.Cog):
         if message.channel.id == self.bait_channel:
             member = message.author
             if not (member.id in self.whitelist or member.top_role >= message.guild.me.top_role):
-                await ban.ban_user(message.guild, member, get_time())
+                await ban.ban_user(member, get_time())
 
 async def setup(bot):
     await bot.add_cog(automod(bot))
