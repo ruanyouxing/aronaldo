@@ -14,14 +14,13 @@ def load_temp_ban():
     except:
         return {}
 
-async def ban_user(guild, member, time_now):
+async def ban_user(member, time_now):
     await member.send("Auto ban, nghịch ngu thì liên hệ admin")
-    await guild.ban(
-        member,
+    await member.ban(
         reason="Auto ban, nghịch ngu thì liên hệ admin",
         delete_message_seconds=3600
     )
-    temp_ban[str(guild.id)] = temp_ban.get(str(guild.id), []) + [(member.id, time_now)]
+    temp_ban[str(member.guild.id)] = temp_ban.get(str(member.guild.id), []) + [(member.id, time_now)]
     await save_temp_ban()
 
 async def unban(bot, guild_id, id, t):
