@@ -2,14 +2,15 @@ import discord
 import asyncio
 import json
 import os
+
 async def save_temp_ban():
     async with lock:
-        with open('./storage/temp_ban.json', 'w') as f:
+        with open(file_path, 'w') as f:
             json.dump(temp_ban, f, indent=4)
 
 def load_temp_ban():
     try:
-        with open('./storage/temp_ban.json', 'r') as f:
+        with open(file_path, 'r') as f:
             return json.load(f)
     except:
         return {}
@@ -30,7 +31,7 @@ async def unban(bot, guild_id, id, t):
         user = discord.Object(id=id)
         await guild.unban(user)
     finally:
-        temp_ban[str(guild_id)].remove([id, t])
+        temp_ban[str(guild_id)].remove((id, t))
         await save_temp_ban()
 
 async def check_unban(bot, time_now, temp_ban_time):
@@ -38,6 +39,14 @@ async def check_unban(bot, time_now, temp_ban_time):
         for id, t in temp_ban[guild].copy():
             if t + temp_ban_time < time_now:
                 asyncio.create_task(unban(bot, guild, id, t))
+
+# file_path = './storage'
+# os.makedirs(file_path, exist_ok=True)
+# file_path = os.path.join(file_path, "temp_ban.txt")
+
+file_path = os.path.expanduser("~/.local/state/aronaldo")
+os.makedirs(file_path, exist_ok=True)
+file_path = os.path.join(file_path, "temp_ban.txt")
 
 temp_ban = load_temp_ban()
 lock = asyncio.Lock()

@@ -6,12 +6,12 @@ import re
 
 async def save_jail():
     async with lock:
-        with open('./storage/jail.json', 'w') as f:
+        with open(file_path, 'w') as f:
             json.dump(jail_list, f, indent=4)
 
 def load_jail():
     try:
-        with open('./storage/jail.json', 'r') as f:
+        with open(file_path, 'r') as f:
             return json.load(f)
     except:
         return {}
@@ -65,6 +65,14 @@ async def check_unjail(bot, time_now, jail_role):
         for id, v in jail_list[guild].copy().items():
             if v["time"] < time_now:
                 asyncio.create_task(unjail_user(bot, guild, int(id), jail_role))
+
+# file_path = './storage'
+# os.makedirs(file_path, exist_ok=True)
+# file_path = os.path.join(file_path, "jail.txt")
+
+file_path = os.path.expanduser("~/.local/state/aronaldo")
+os.makedirs(file_path, exist_ok=True)
+file_path = os.path.join(file_path, "jail.txt")
 
 jail_list = load_jail()
 lock = asyncio.Lock()

@@ -5,6 +5,7 @@ from discord.ext import commands
 import os
 import json
 from dotenv import load_dotenv
+from utils import load_cogs
 
 class Aronaldo(commands.Bot):
     def __init__(self):
@@ -17,11 +18,8 @@ class Aronaldo(commands.Bot):
 
     async def setup_hook(self):
         self.remove_command("help")
-        for cmd in os.listdir("./cogs"):
-            if cmd.endswith(".py"):
-                await self.load_extension(f"cogs.{cmd[:-3]}")
 
-        await self.tree.sync()
+        await load_cogs(self)
         print("Đã đồng bộ Slash Commands.")
 
     async def on_ready(self):
