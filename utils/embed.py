@@ -1,7 +1,6 @@
 import discord
 import re
 import datetime
-import json
 
 def get_time():
     return datetime.datetime.now().timestamp()
