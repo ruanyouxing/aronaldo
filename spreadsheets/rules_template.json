@@ -1,0 +1,88 @@
+[
+  {
+    "setDataValidation": {
+      "range": {
+        "startRowIndex": 1,
+        "startColumnIndex": 10,
+        "endColumnIndex": 11
+      },
+      "rule": {
+        "condition": {
+          "type": "BOOLEAN"
+        },
+        "showCustomUi": true
+      }
+    }
+  },
+  {
+    "addConditionalFormatRule": {
+      "rule": {
+        "ranges": [
+          { "startRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": 11 }
+        ],
+        "booleanRule": {
+          "condition": {
+            "type": "CUSTOM_FORMULA",
+            "values": [{ "userEnteredValue": "=$K2=TRUE" }]
+          },
+          "format": {
+            "backgroundColor": { "red": 0.85, "green": 0.93, "blue": 0.83 }
+          }
+        }
+      },
+      "index": 0
+    }
+  },
+  {
+    "addConditionalFormatRule": {
+      "rule": {
+        "ranges": [
+          { "startRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": 11 }
+        ],
+        "booleanRule": {
+          "condition": {
+            "type": "CUSTOM_FORMULA",
+            "values": [{ "userEnteredValue": "=$K2=FALSE" }]
+          },
+          "format": {
+            "backgroundColor": { "red": 1.0, "green": 0.95, "blue": 0.8 }
+          }
+        }
+      },
+      "index": 1
+    }
+  },
+  {
+    "repeatCell": {
+      "range": {
+        "startRowIndex": 1,
+        "startColumnIndex": 0,
+        "endColumnIndex": 10
+      },
+      "cell": {
+        "userEnteredFormat": {
+          "horizontalAlignment": "CENTER",
+          "verticalAlignment": "MIDDLE"
+        }
+      },
+      "fields": "userEnteredFormat(horizontalAlignment,verticalAlignment)"
+    }
+  },
+  {
+    "repeatCell": {
+      "range": {
+        "startRowIndex": 1,
+        "startColumnIndex": 3,
+        "endColumnIndex": 4
+      },
+      "cell": {
+        "userEnteredFormat": {
+          "textFormat": {
+            "bold": true
+          }
+        }
+      },
+      "fields": "userEnteredFormat.textFormat.bold"
+    }
+  }
+]
