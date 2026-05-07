@@ -29,14 +29,14 @@ class CommissionCog(commands.Cog):
             customer="Tag KH (@Customer) hoặc nhập tên KH",
             deadline="DD/MM/YYYY",
             price="Giá cả. VD: 300000",
-            surcharge = "Phụ phí riêng cho editor (được tính riêng trước khi chia chác)",
             translator="Tag người dịch (@Trans) hoặc tên",
             editor="Tag editor (@Edit) hoặc tên",
-            ratio="Tỷ lệ chia chác (VD: 50/50)"
+            ratio="Tỷ lệ chia chác (VD: 50/50)",
+            surcharge = "Phụ phí riêng cho editor (được tính riêng trước khi chia chác)",
             )
 
 
-    async def submit(self, interaction: discord.Interaction, name: str, link: str, customer: str, deadline: str, price: str, surcharge:str, translator: str, editor: str, ratio: str = "50/50"):
+    async def submit(self, interaction: discord.Interaction, name: str, link: str, customer: str, deadline: str, price: str, translator: str, editor: str, ratio: str = "50/50", surcharge: str = ""):
         await interaction.response.defer(ephemeral=False)
         
         cust_id, cust_name = self.parse_user_input(interaction, customer)
