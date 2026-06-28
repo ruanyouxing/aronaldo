@@ -7,7 +7,7 @@ def get_time():
 
 def create_embed(title, description, links, archive, archive_file):
     urls = ''
-    web = ['vi-h', 'mimi', 'vina']
+    web = ['vi-h', 'mimi', 'vina', 'yurigarden', 'moetruyen']
     for link in links.split():
         for w in web:
             if w in link:
