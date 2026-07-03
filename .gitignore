@@ -7,4 +7,4 @@ env
 temp_ban.json
 jail.json
 credentials.json
-variables.json
+.direnv/

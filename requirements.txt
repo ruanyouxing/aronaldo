@@ -1,4 +1,0 @@
-discord
-dotenv
-gspread
-google-auth
