@@ -1,8 +1,10 @@
 '''dev by caophihung'''
 
+import os
+os.environ.setdefault("SSL_CERT_FILE", __import__("certifi").where())
+
 import discord
 from discord.ext import commands
-import os
 import json
 from dotenv import load_dotenv
 from utils import load_cogs
