@@ -1,4 +1,9 @@
 import io
+import asyncio
+import json
+import re
+import struct
+from urllib.parse import quote
 import aiohttp
 import discord
 from discord import app_commands
@@ -9,6 +14,18 @@ from typing import Optional, Dict, Any
 from utils.hitomi import BooleanQueryParser, get_thumbnail_url
 from utils.db import TrackDatabase
 
+HITOMI_CDN = "https://ltn.gold-usergeneratedcontent.net"
+HITOMI_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Referer": "https://hitomi.la/",
+}
+# .nozomi files are newest-first big-endian uint32 galleryblock IDs.
+# Read this many IDs deep per index per tick; metadata downloads are gated
+# by the seen-cache so depth only costs bytes, not requests.
+NOZOMI_SCAN_DEPTH = 400
+METADATA_CONCURRENCY = 8
+SEEN_CACHE_MAX = 20000
+
 
 class TrackCog(commands.Cog, name="track"):
     def __init__(self, bot: commands.Bot):
@@ -16,6 +33,8 @@ class TrackCog(commands.Cog, name="track"):
         self.db = TrackDatabase()
         self.session: Optional[aiohttp.ClientSession] = None
         self.active_tracks: Dict[int, Dict[str, Any]] = {}
+        # Ordered set of galleryblock IDs already downloaded (insertion-ordered dict)
+        self._seen_ids: Dict[int, None] = {}
 
     async def cog_load(self):
         await self.db.init()
@@ -355,8 +374,135 @@ class TrackCog(commands.Cog, name="track"):
         except (discord.Forbidden, discord.HTTPException):
             pass
 
+    @staticmethod
+    def _parse_nozomi_ids(data: bytes) -> list:
+        """Parses a .nozomi payload: big-endian uint32 galleryblock IDs, newest-first."""
+        n = len(data) // 4
+        return list(struct.unpack(f">{n}I", data[: n * 4]))
+
+    @staticmethod
+    def _index_urls_for(record: Dict[str, Any]) -> set:
+        """Maps a track record to hitomi nozomi search-index URLs.
+
+        Index scheme (verified live):
+            {cdn}/type/{category}-{language}.nozomi
+        Values are lowercase; empty side becomes 'all'; multi-values split on '|'.
+        """
+        def split_values(field: Optional[str]) -> list:
+            if not field:
+                return []
+            return [v.strip().strip('"').lower() for v in field.split("|") if v.strip().strip('"')]
+
+        categories = split_values(record.get("category")) or ["all"]
+        languages = split_values(record.get("language")) or ["all"]
+
+        urls = set()
+        for cat in categories:
+            for lang in languages:
+                urls.add(f"{HITOMI_CDN}/type/{quote(cat)}-{quote(lang)}.nozomi")
+        return urls
+
+    @staticmethod
+    def _parse_gallery_timestamp(info: Dict[str, Any]) -> datetime:
+        raw = info.get("date") or info.get("datepublished")
+        ts = None
+        if raw:
+            s = str(raw)
+            # hitomi sometimes emits short UTC offsets like '+09' which
+            # fromisoformat rejects -> normalize to '+09:00'
+            if re.search(r"[+-]\d{2}$", s):
+                s += ":00"
+            try:
+                ts = datetime.fromisoformat(s)
+            except ValueError:
+                ts = None
+        if ts is None:
+            return datetime.now(timezone.utc)
+        return ts.replace(tzinfo=timezone.utc) if ts.tzinfo is None else ts
+
+    def _normalize_gallery_info(self, info: Dict[str, Any]) -> Dict[str, Any]:
+        """Converts raw galleries/{id}.js JSON into the crawler dict shape the loop expects."""
+        return {
+            "id": info["id"],
+            "title": info.get("title") or "Unknown Title",
+            "artists": [a.get("artist", "") for a in (info.get("artists") or [])],
+            "parodys": [p.get("parody", "") for p in (info.get("parodys") or [])],
+            "characters": [c.get("character", "") for c in (info.get("characters") or [])],
+            "language": info.get("language") or "",
+            "type": info.get("type") or "",
+            "tags": [t.get("tag", "") for t in (info.get("tags") or [])],
+            "timestamp": self._parse_gallery_timestamp(info),
+            "files": info.get("files") or [],
+        }
+
+    async def _fetch_gallery_info(self, session: aiohttp.ClientSession, gallery_id: int):
+        url = f"{HITOMI_CDN}/galleries/{gallery_id}.js"
+        try:
+            async with session.get(url, headers=HITOMI_HEADERS, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status != 200:
+                    return None
+                text = await resp.text()
+        except Exception as e:
+            print(f"[track] metadata fetch failed for {gallery_id}: {e}")
+            return None
+        try:
+            info = json.loads(text.partition("=")[2].strip().rstrip(";"))
+        except (ValueError, IndexError):
+            return None
+        return self._normalize_gallery_info(info)
+
     async def fetch_recent_galleries(self) -> list:
-        return []
+        """Crawls hitomi.la search indexes derived from active rules and returns
+        normalized gallery dicts newer than what has already been processed."""
+        if not self.session or self.session.closed or not self.active_tracks:
+            return []
+
+        index_urls = set()
+        for rule in self.active_tracks.values():
+            index_urls |= self._index_urls_for(rule["raw"])
+        if not index_urls:
+            return []
+
+        candidate_ids = []
+        # Hitomi's CDN truncates large plain GETs on .nozomi files (>1MB), so
+        # read only the head slice we need via a Range request (their frontend
+        # does the same); servers ignoring Range return 200 with the full body.
+        index_headers = {**HITOMI_HEADERS, "Range": f"bytes=0-{NOZOMI_SCAN_DEPTH * 4 - 1}"}
+        for url in index_urls:
+            try:
+                async with self.session.get(url, headers=index_headers, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                    if resp.status not in (200, 206):
+                        print(f"[track] index unavailable ({resp.status}): {url}")
+                        continue
+                    data = await resp.read()
+            except Exception as e:
+                print(f"[track] index fetch failed: {url} ({e})")
+                continue
+            candidate_ids.extend(
+                self._parse_nozomi_ids(data[: NOZOMI_SCAN_DEPTH * 4])[:NOZOMI_SCAN_DEPTH]
+            )
+
+        unseen = []
+        seen_now = self._seen_ids
+        for gid in candidate_ids:
+            if gid not in seen_now:
+                seen_now[gid] = None
+                unseen.append(gid)
+        # Trim ordered-set cache to bound memory
+        if len(seen_now) > SEEN_CACHE_MAX:
+            for old in list(seen_now.keys())[: len(seen_now) - SEEN_CACHE_MAX // 2]:
+                del seen_now[old]
+        if not unseen:
+            return []
+
+        semaphore = asyncio.Semaphore(METADATA_CONCURRENCY)
+
+        async def bounded(gid):
+            async with semaphore:
+                return await self._fetch_gallery_info(self.session, gid)
+
+        results = await asyncio.gather(*(bounded(g) for g in unseen))
+        return [g for g in results if g]
 
     @tracker_loop.before_loop
     async def before_tracker(self):
