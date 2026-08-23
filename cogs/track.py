@@ -273,7 +273,7 @@ class TrackCog(commands.Cog, name="track"):
 
     # --- Background Evaluation Worker ---
 
-    @tasks.loop(seconds=30.0)
+    @tasks.loop(seconds=60.0)
     async def tracker_loop(self):
         if not self.active_tracks:
             return
@@ -359,11 +359,11 @@ class TrackCog(commands.Cog, name="track"):
         if thumbnail_file:
             embed.set_thumbnail(url=f"attachment://{thumbnail_file.filename}")
 
-        embed.add_field(name="Artist", value=", ".join(gallery.get("artists") or []) or "N/A", inline=True)
-        embed.add_field(name="Series", value=", ".join(gallery.get("parodys") or []) or "Original", inline=True)
-        embed.add_field(name="Character", value=", ".join(gallery.get("characters") or []) or "N/A", inline=True)
-        embed.add_field(name="Language", value=str(gallery.get("language") or "N/A"), inline=True)
-        embed.add_field(name="Type", value=str(gallery.get("type") or "N/A"), inline=True)
+        embed.add_field(name="Artist", value=", ".join(gallery.get("artists") or []) or "N/A", inline=False)
+        embed.add_field(name="Series", value=", ".join(gallery.get("parodys") or []) or "Original", inline=False)
+        embed.add_field(name="Character", value=", ".join(gallery.get("characters") or []) or "N/A", inline=False)
+        embed.add_field(name="Language", value=str(gallery.get("language") or "N/A"), inline=False)
+        embed.add_field(name="Type", value=str(gallery.get("type") or "N/A"), inline=False)
         embed.add_field(name="Tags", value=", ".join(gallery.get("tags") or [])[:1024] or "None", inline=False)
 
         try:
@@ -423,7 +423,9 @@ class TrackCog(commands.Cog, name="track"):
     def _normalize_gallery_info(self, info: Dict[str, Any]) -> Dict[str, Any]:
         """Converts raw galleries/{id}.js JSON into the crawler dict shape the loop expects."""
         return {
-            "id": info["id"],
+            # galleries/{id}.js serves the id as a string; normalize to int so
+            # it stays comparable with .nozomi index IDs
+            "id": int(info["id"]),
             "title": info.get("title") or "Unknown Title",
             "artists": [a.get("artist", "") for a in (info.get("artists") or [])],
             "parodys": [p.get("parody", "") for p in (info.get("parodys") or [])],
@@ -482,11 +484,12 @@ class TrackCog(commands.Cog, name="track"):
                 self._parse_nozomi_ids(data[: NOZOMI_SCAN_DEPTH * 4])[:NOZOMI_SCAN_DEPTH]
             )
 
+        # Only queue IDs not processed yet; "seen" is marked AFTER a successful
+        # metadata download below, so failures are retried on the next tick.
         unseen = []
         seen_now = self._seen_ids
         for gid in candidate_ids:
             if gid not in seen_now:
-                seen_now[gid] = None
                 unseen.append(gid)
         # Trim ordered-set cache to bound memory
         if len(seen_now) > SEEN_CACHE_MAX:
@@ -502,7 +505,13 @@ class TrackCog(commands.Cog, name="track"):
                 return await self._fetch_gallery_info(self.session, gid)
 
         results = await asyncio.gather(*(bounded(g) for g in unseen))
-        return [g for g in results if g]
+        galleries = []
+        for gid, gallery in zip(unseen, results):
+            if gallery is None:
+                continue  # stays unseen -> retried next tick
+            seen_now[gid] = None
+            galleries.append(gallery)
+        return galleries
 
     @tracker_loop.before_loop
     async def before_tracker(self):
