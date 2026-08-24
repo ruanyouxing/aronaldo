@@ -1,4 +1,5 @@
 import io
+import os
 import asyncio
 import json
 import re
@@ -10,7 +11,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
-
+from pathlib import Path
 from utils.hitomi import BooleanQueryParser, get_thumbnail_url
 from utils.db import TrackDatabase
 
@@ -26,11 +27,14 @@ NOZOMI_SCAN_DEPTH = 400
 METADATA_CONCURRENCY = 8
 SEEN_CACHE_MAX = 20000
 
+state_path = Path(os.getenv("HOME", 'root') + "/.local/state/aronaldo")
+state_path.mkdir(parents=True, exist_ok=True)
+db_path = state_path / "tracks.db"
 
 class TrackCog(commands.Cog, name="track"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db = TrackDatabase()
+        self.db = TrackDatabase(db_path=str(db_path))
         self.session: Optional[aiohttp.ClientSession] = None
         self.active_tracks: Dict[int, Dict[str, Any]] = {}
         # Ordered set of galleryblock IDs already downloaded (insertion-ordered dict)
