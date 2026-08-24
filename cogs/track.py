@@ -27,7 +27,7 @@ NOZOMI_SCAN_DEPTH = 400
 METADATA_CONCURRENCY = 8
 SEEN_CACHE_MAX = 20000
 
-state_path = Path(os.getenv("HOME", 'root') + "/.local/state/aronaldo")
+state_path = Path('/var/lib/aronaldo')
 state_path.mkdir(parents=True, exist_ok=True)
 db_path = state_path / "tracks.db"
 
